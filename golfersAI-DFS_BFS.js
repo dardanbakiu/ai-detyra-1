@@ -1,60 +1,51 @@
-function printWeeks(weekMatrix, numOfGolfers, groupSize) {
-    for (const week of weekMatrix) {
-      const groups = [];
-      for (let i = 0; i < numOfGolfers; i += groupSize)
-        groups.push(
-          week
-            .filter((x, index) => index >= i && index < i + groupSize)
-            .map((x) => padNumber(x))
-            .join(' ')
-            .concat(' | ')
-        );
-      console.log(groups.join(' '));
-    }
-  }
-  
-  function padNumber(num) {
-    return num < 10 ? `${num} ` : `${num}`;
-  }
-  
-  function parseArguments() {
-    const n = 1;
-  
-    const algo = process.argv[2];
-    if (algo !== 'dfs' && algo !== 'bfs') {
-      console.log('Invalid argument for algorithm');
-      process.exit();
-    }
-    return [n, algo];
-  }
-  
-  function getOtherGolfersInGroup(row, column, groupSize, weekMatrix) {
-    const group = Math.floor(column / groupSize);
-    const groupStart = group * groupSize;
-    const groupEnd = groupStart + groupSize - 1;
-    return weekMatrix[row].filter((x, index) => index >= groupStart && index <= groupEnd && x !== 0);
-  }
-  
-  function delay(seconds) {
-    const waitTill = new Date(new Date().getTime() + seconds * 1000);
-    while (waitTill > new Date()) {}
-  }
-  
-  module.exports = {
-    printWeeks,
-    parseArguments,
-    getOtherGolfersInGroup,
-    delay,
-  };
+var players = 32;
+var groupSize = 4;
+var [javet, algoritmi] = weekConditions();
 
-const [weeks, interactive, algo] = parseArguments();
-const numOfGolfers = 32;
-const groupSize = 4;
+function ranNumber(num) {
+  return num < 10 ? `${num} ` : `${num}`;
+}
 
-search();
+function getWeeks(weeks, players, groupSize) {
+  for (const week of weeks) {
+    const groups = [];
+    for (let i = 0; i < players; i += groupSize)
+      groups.push(
+        week
+          .filter((x, index) => index >= i && index < i + groupSize)
+          .map((x) => ranNumber(x))
+          .join(' ')
+          .concat(' | ')
+      );
+    console.log(groups.join(' '));
+  }
+}
 
-function search() {
-  const firstTable = new Array(weeks).fill().map((x) => new Array(numOfGolfers).fill(0));
+function weekConditions() {
+  const n = 1;
+
+  let algoritmi = process.argv[2];
+  if (algoritmi !== 'dfs' && algoritmi !== 'bfs') {
+    console.log('Algoritmi i gabuar');
+    process.exit();
+  }
+  return [n, algoritmi];
+}
+
+function playersPerGroups(row, column, groupSize, weeks) {
+  const group = Math.floor(column / groupSize);
+  const groupStart = group * groupSize;
+  const groupEnd = groupStart + groupSize - 1;
+  return weeks[row].filter((x, index) => index >= groupStart && index <= groupEnd && x !== 0);
+}
+
+function delay(seconds) {
+  const waitTill = new Date(new Date().getTime() + seconds * 1000);
+  while (waitTill > new Date()) { }
+}
+
+function fillTab() {
+  const firstTable = new Array(javet).fill().map((x) => new Array(players).fill(0));
   const tablesToVisit = [firstTable];
   const visitedTables = new Map();
   while (true) {
@@ -63,10 +54,10 @@ function search() {
       return;
     }
 
-    const currentTable = algo === 'dfs' ? tablesToVisit.pop() : tablesToVisit.shift();
+    let currentTable = algoritmi === 'dfs' ? tablesToVisit.pop() : tablesToVisit.shift();
     if (isSolution(currentTable)) {
       console.clear();
-      printWeeks(currentTable, numOfGolfers, groupSize);
+      getWeeks(currentTable, players, groupSize);
       return;
     }
 
@@ -86,14 +77,14 @@ function search() {
 
 function isSolution(table) {
   const games = new Map();
-  for (let i = 0; i < numOfGolfers; i++) {
-    for (let j = 0; j < weeks; j++) {
+  for (let i = 0; i < players; i++) {
+    for (let j = 0; j < javet; j++) {
       const value = table[j][i];
       if (value === 0) return false;
 
       if (!games.has(value)) games.set(value, new Set());
 
-      const otherGolfersInGroup = getOtherGolfersInGroup(j, i, groupSize, table).filter(
+      const otherGolfersInGroup = playersPerGroups(j, i, groupSize, table).filter(
         (x) => x === value
       );
       const alreadyPlayed = games.get(value);
@@ -109,11 +100,11 @@ function isSolution(table) {
 
 function generateChildrenTables(table) {
   let [rowOfEmptyCell, columnOfEmptyCell] = [0, 0];
-  for (let i = 0; i < numOfGolfers; i++)
-    for (let j = 0; j < weeks; j++)
+  for (let i = 0; i < players; i++)
+    for (let j = 0; j < javet; j++)
       if (table[j][i] === 0) {
         [rowOfEmptyCell, columnOfEmptyCell] = [j, i];
-        return new Array(numOfGolfers).fill().map((x, index) => {
+        return new Array(players).fill().map((x, index) => {
           x = JSON.parse(JSON.stringify(table));
           x[rowOfEmptyCell][columnOfEmptyCell] = index + 1;
           return x;
@@ -146,8 +137,10 @@ function calculateTableHash(table) {
 }
 
 function areTablesEqual(table1, table2) {
-  for (let i = 0; i < numOfGolfers; i++)
-    for (let j = 0; j < weeks; j++) if (table1[j][i] !== table2[j][i]) return false;
+  for (let i = 0; i < players; i++)
+    for (let j = 0; j < javet; j++) if (table1[j][i] !== table2[j][i]) return false;
 
   return true;
 }
+
+fillTab();
