@@ -13,7 +13,7 @@ def solve_sudoku(board):
         if value in board[i]:
             return False
 
-        # column constraints
+        # column constraints, kontrollo nese qajo vlere esht veqse ne qat fush
         for k in range(9):
             if board[k][j] == value:
                 return False
